@@ -13,6 +13,7 @@ import {
 export enum MediaType {
   IMAGE = 'IMAGE',
   VIDEO = 'VIDEO',
+  AUDIO = 'AUDIO',
 }
 
 @Entity('posts')

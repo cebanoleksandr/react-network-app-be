@@ -13,6 +13,9 @@ import {
   Follow,
   Like,
 } from './interactions/entities/interaction.entity';
+import { UsersModule } from './user/user.module';
+import { PostModule } from './post/post.module';
+import { Bookmark } from './post/entities/bookmark.entity';
 
 @Module({
   imports: [
@@ -27,13 +30,15 @@ import {
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, Post, Media, Comment, Like, Follow],
+        entities: [User, Post, Media, Comment, Like, Follow, Bookmark],
         synchronize: true,
         logging: false,
       }),
     }),
     AuthModule,
+    UsersModule,
     MediaModule,
+    PostModule,
     InteractionsModule,
   ],
   controllers: [AppController],

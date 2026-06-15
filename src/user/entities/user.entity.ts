@@ -3,6 +3,7 @@ import {
   Follow,
   Like,
 } from 'src/interactions/entities/interaction.entity';
+import { Bookmark } from 'src/post/entities/bookmark.entity';
 import { Post } from 'src/post/entities/post.entity';
 import {
   Entity,
@@ -62,4 +63,7 @@ export class User {
 
   @OneToMany(() => Follow, (follow) => follow.following)
   followers: Follow[];
+
+  @OneToMany(() => Bookmark, (bookmark) => bookmark.user)
+  bookmarks: Bookmark[];
 }

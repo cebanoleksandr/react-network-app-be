@@ -96,7 +96,13 @@ export class InteractionsService {
         id: true,
         text: true,
         createdAt: true,
-        user: { id: true, username: true, avatarUrl: true },
+        user: {
+          id: true,
+          username: true,
+          avatarUrl: true,
+          firstName: true,
+          lastName: true,
+        },
       },
       order: { createdAt: 'ASC' },
     });

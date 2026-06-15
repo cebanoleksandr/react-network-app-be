@@ -11,6 +11,30 @@ export class UsersService {
     private userRepository: Repository<User>,
   ) {}
 
+  async getUserById(userId: string, isFullProfile = false) {
+    const fieldsToSelect = {
+      id: true,
+      username: true,
+      firstName: true,
+      lastName: true,
+      avatarUrl: true,
+      bio: true,
+      createdAt: true,
+      email: isFullProfile,
+    };
+
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: fieldsToSelect,
+    });
+
+    if (!user) {
+      throw new NotFoundException('Користувача не знайдено');
+    }
+
+    return user;
+  }
+
   async updateProfile(userId: string, dto: UpdateProfileDto) {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {

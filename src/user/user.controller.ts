@@ -16,6 +16,12 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@Req() req: any) {
+    return this.usersService.getUserById(req.user.id, true);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('profile')
   async updateProfile(@Req() req: any, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(req.user.id, dto);
@@ -24,5 +30,10 @@ export class UsersController {
   @Get('profile/:username')
   async getProfile(@Param('username') username: string) {
     return this.usersService.getProfileByUsername(username);
+  }
+
+  @Get(':id')
+  async getUserById(@Param('id') id: string) {
+    return this.usersService.getUserById(id, false);
   }
 }

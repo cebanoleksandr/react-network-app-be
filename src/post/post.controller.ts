@@ -24,9 +24,23 @@ export class PostsController {
     return this.postsService.create(dto, req.user);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  async findAll(@Query() query: GetPostsQueryDto) {
-    return this.postsService.findAll(query);
+  async findAll(@Query() query: GetPostsQueryDto, @Req() req: any) {
+    const userId = req.user?.id;
+    return this.postsService.findAll(query, userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/bookmark')
+  async toggleBookmark(@Param('id') id: string, @Req() req: any) {
+    return this.postsService.toggleBookmark(id, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('bookmarked/all')
+  async getBookmarked(@Query() query: GetPostsQueryDto, @Req() req: any) {
+    return this.postsService.getBookmarkedPosts(req.user.id, query);
   }
 
   @Get(':id')
