@@ -16,6 +16,9 @@ import {
 import { UsersModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { Bookmark } from './post/entities/bookmark.entity';
+import { ChatModule } from './chat/chat.module';
+import { Chat } from './chat/entities/chat.entity';
+import { Message } from './chat/entities/message.entity';
 
 @Module({
   imports: [
@@ -30,7 +33,17 @@ import { Bookmark } from './post/entities/bookmark.entity';
         username: configService.get<string>('DB_USERNAME'),
         password: configService.get<string>('DB_PASSWORD'),
         database: configService.get<string>('DB_NAME'),
-        entities: [User, Post, Media, Comment, Like, Follow, Bookmark],
+        entities: [
+          User,
+          Post,
+          Media,
+          Comment,
+          Like,
+          Follow,
+          Bookmark,
+          Chat,
+          Message,
+        ],
         synchronize: true,
         logging: false,
       }),
@@ -40,6 +53,7 @@ import { Bookmark } from './post/entities/bookmark.entity';
     MediaModule,
     PostModule,
     InteractionsModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
