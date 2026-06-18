@@ -47,20 +47,4 @@ export class InteractionsController {
   async deleteComment(@Param('commentId') commentId: string, @Req() req: any) {
     return this.interactionsService.deleteComment(commentId, req.user.id);
   }
-
-  @UseGuards(JwtAuthGuard)
-  @Post('users/:userId/follow')
-  async toggleFollow(@Param('userId') targetUserId: string, @Req() req: any) {
-    return this.interactionsService.toggleFollow(targetUserId, req.user.id);
-  }
-
-  @Get('users/:userId/followers')
-  async getFollowers(@Param('userId') userId: string) {
-    return this.interactionsService.getFollowers(userId);
-  }
-
-  @Get('users/:userId/following')
-  async getFollowing(@Param('userId') userId: string) {
-    return this.interactionsService.getFollowing(userId);
-  }
 }

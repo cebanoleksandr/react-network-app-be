@@ -6,14 +6,22 @@ import {
   Param,
   UseGuards,
   Req,
+  Post,
+  Query,
 } from '@nestjs/common';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './user.service';
+import { GetAllUsersDto } from './dto/get-all-users.dto';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  async getAllUsers(@Query() dto: GetAllUsersDto) {
+    return this.usersService.getAllUsers(dto);
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -30,6 +38,22 @@ export class UsersController {
   @Get('profile/:username')
   async getProfile(@Param('username') username: string) {
     return this.usersService.getProfileByUsername(username);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':userId/follow')
+  async toggleFollow(@Param('userId') targetUserId: string, @Req() req: any) {
+    return this.usersService.toggleFollow(targetUserId, req.user.id);
+  }
+
+  @Get(':userId/followers')
+  async getFollowers(@Param('userId') userId: string) {
+    return this.usersService.getFollowers(userId);
+  }
+
+  @Get(':userId/following')
+  async getFollowing(@Param('userId') userId: string) {
+    return this.usersService.getFollowing(userId);
   }
 
   @Get(':id')
