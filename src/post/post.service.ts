@@ -10,6 +10,7 @@ import { GetPostsQueryDto } from './dto/get-posts-query.dto';
 import { Media, Post } from './entities/post.entity';
 import { Bookmark } from './entities/bookmark.entity';
 import { Comment, Like } from 'src/interactions/entities/interaction.entity';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @Injectable()
 export class PostsService {
@@ -82,15 +83,19 @@ export class PostsService {
       skip: skip,
     });
 
-    // 2. Оновлюємо мапінг постів: додаємо підрахунок коментарів
     const postsWithMeta = await Promise.all(
       posts.map(async (post) => {
         let isLiked = false;
+        let isBookmarked = false;
 
-        // Одночасно запускаємо два прості запити для оптимізації
-        const [like, commentsCount] = await Promise.all([
+        const [like, bookmark, commentsCount] = await Promise.all([
           currentUserId
             ? this.likeRepository.findOne({
+                where: { post: { id: post.id }, user: { id: currentUserId } },
+              })
+            : null,
+          currentUserId
+            ? this.bookmarkRepository.findOne({
                 where: { post: { id: post.id }, user: { id: currentUserId } },
               })
             : null,
@@ -100,11 +105,13 @@ export class PostsService {
         ]);
 
         if (like) isLiked = true;
+        if (bookmark) isBookmarked = true;
 
         return {
           ...post,
           isLiked,
-          commentsCount, // Поле з'явиться на фронтенді
+          isBookmarked,
+          commentsCount,
         };
       }),
     );
@@ -119,7 +126,7 @@ export class PostsService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, currentUserId?: string) {
     const post = await this.postRepository.findOne({
       where: { id },
       relations: ['user', 'media'],
@@ -134,6 +141,8 @@ export class PostsService {
           email: true,
           avatarUrl: true,
           bio: true,
+          firstName: true,
+          lastName: true,
         },
         media: {
           id: true,
@@ -146,14 +155,19 @@ export class PostsService {
 
     if (!post) throw new NotFoundException('Пост не знайдено');
 
-    // 3. Додаємо commentsCount для поодинокого поста
-    const commentsCount = await this.commentRepository.count({
-      where: { post: { id: post.id } },
-    });
+    const [commentsCount, bookmark] = await Promise.all([
+      this.commentRepository.count({ where: { post: { id: post.id } } }),
+      currentUserId
+        ? this.bookmarkRepository.findOne({
+            where: { post: { id: post.id }, user: { id: currentUserId } },
+          })
+        : null,
+    ]);
 
     return {
       ...post,
       commentsCount,
+      isBookmarked: !!bookmark,
     };
   }
 
@@ -214,7 +228,10 @@ export class PostsService {
         const { ...cleanUser } = b.post.user as any;
         b.post.user = cleanUser;
       }
-      return b.post;
+      return {
+        ...b.post,
+        isBookmarked: true,
+      };
     });
 
     return {
@@ -225,5 +242,103 @@ export class PostsService {
         lastPage: Math.ceil(total / limit),
       },
     };
+  }
+
+  async getFavoritePosts(userId: string, query: GetPostsQueryDto) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const [likes, total] = await this.likeRepository.findAndCount({
+      where: { user: { id: userId } },
+      relations: ['post', 'post.user', 'post.media'],
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: skip,
+    });
+
+    const posts = await Promise.all(
+      likes.map(async (like) => {
+        const post = like.post;
+
+        const bookmark = await this.bookmarkRepository.findOne({
+          where: { post: { id: post.id }, user: { id: userId } },
+        });
+
+        const commentsCount = await this.commentRepository.count({
+          where: { post: { id: post.id } },
+        });
+
+        return {
+          id: post.id,
+          caption: post.caption,
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt,
+          user: post.user
+            ? {
+                id: post.user.id,
+                username: post.user.username,
+                email: post.user.email,
+                avatarUrl: post.user.avatarUrl,
+                bio: post.user.bio,
+              }
+            : null,
+          media: post.media || [],
+          isLiked: true,
+          isBookmarked: !!bookmark,
+          commentsCount,
+        };
+      }),
+    );
+
+    return {
+      data: posts,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async update(id: string, userId: string, dto: UpdatePostDto) {
+    const post = await this.postRepository.findOne({
+      where: { id },
+      relations: ['user', 'media'],
+    });
+
+    if (!post) throw new NotFoundException('Пост не знайдено');
+
+    if (post.user.id !== userId) {
+      throw new ForbiddenException('Ви не можете редагувати чужий пост');
+    }
+
+    if (dto.caption !== undefined) {
+      post.caption = dto.caption;
+    }
+
+    if (dto.media) {
+      if (post.media && post.media.length > 0) {
+        await this.mediaRepository.remove(post.media);
+      }
+
+      if (dto.media.length > 0) {
+        const newMediaEntities = dto.media.map((m) =>
+          this.mediaRepository.create({
+            url: m.url,
+            thumbnailUrl: m.thumbnailUrl,
+            type: m.type,
+            post: post,
+          }),
+        );
+        post.media = await this.mediaRepository.save(newMediaEntities);
+      } else {
+        post.media = [];
+      }
+    }
+
+    await this.postRepository.save(post);
+
+    return this.findOne(id, userId);
   }
 }
