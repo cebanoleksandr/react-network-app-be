@@ -5,6 +5,7 @@ import {
 } from 'src/interactions/entities/interaction.entity';
 import { Bookmark } from 'src/post/entities/bookmark.entity';
 import { Post } from 'src/post/entities/post.entity';
+import { Story } from 'src/story/entities/story.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -66,4 +67,7 @@ export class User {
 
   @OneToMany(() => Bookmark, (bookmark) => bookmark.user)
   bookmarks: Bookmark[];
+
+  @OneToMany(() => Story, (story) => story.user)
+  stories: Story[];
 }

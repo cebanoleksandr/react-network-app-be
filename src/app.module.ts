@@ -19,6 +19,8 @@ import { Bookmark } from './post/entities/bookmark.entity';
 import { ChatModule } from './chat/chat.module';
 import { Chat } from './chat/entities/chat.entity';
 import { Message } from './chat/entities/message.entity';
+import { StoryModule } from './story/story.module';
+import { Story } from './story/entities/story.entity';
 
 @Module({
   imports: [
@@ -43,6 +45,7 @@ import { Message } from './chat/entities/message.entity';
           Bookmark,
           Chat,
           Message,
+          Story,
         ],
         synchronize: true,
         logging: false,
@@ -54,6 +57,7 @@ import { Message } from './chat/entities/message.entity';
     PostModule,
     InteractionsModule,
     ChatModule,
+    StoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
