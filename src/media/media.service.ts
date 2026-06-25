@@ -39,6 +39,12 @@ export class MediaService {
     return {
       uploadUrl: data.signedUrl,
       path: filePath,
+      publicUrl: this.getPublicUrl(filePath),
     };
+  }
+
+  getPublicUrl(filePath: string): string {
+    const url = this.configService.get<string>('SUPABASE_URL');
+    return `${url}/storage/v1/object/public/${this.bucketName}/${filePath}`;
   }
 }

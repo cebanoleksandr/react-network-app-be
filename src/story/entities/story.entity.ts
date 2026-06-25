@@ -6,6 +6,8 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm';
 
 @Entity('stories')
@@ -30,4 +32,8 @@ export class Story {
 
   @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
+
+  @ManyToMany(() => User)
+  @JoinTable({ name: 'story_views' })
+  views: User[];
 }

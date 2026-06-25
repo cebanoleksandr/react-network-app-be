@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Req,
+  Param,
+} from '@nestjs/common';
 import { StoryService } from './story.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateStoryDto } from './dto/create-story.dto';
@@ -16,5 +24,10 @@ export class StoryController {
   @Get('feed')
   async getFeed(@Req() req) {
     return this.storyService.getFeedStories(req.user);
+  }
+
+  @Post(':id/view')
+  async viewStory(@Param('id') storyId: string, @Req() req) {
+    return this.storyService.viewStory(storyId, req.user);
   }
 }
